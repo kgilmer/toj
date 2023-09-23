@@ -1,0 +1,19 @@
+{
+    "animals" : {
+        "deer" : {
+            "avg-weight-kg" : 56,
+            "leg-count": 4,
+            "diet" : "herbivore"
+        },
+        "monkey" : {
+            "avg-weight-kg" : 16,
+            "leg-count": 2,
+            "diet" : "herbivore"
+        },
+        "piranha" : {
+            "avg-weight-kg" : 1,
+            "leg-count": 0,
+            "diet" : "carnivore"
+        }      
+    }
+}

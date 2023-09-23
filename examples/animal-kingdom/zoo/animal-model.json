@@ -1,0 +1,11 @@
+{
+    "animals" : {
+        "deer" : null,
+        "monkey" : {
+            "avg-weight-kg" : 20
+        },
+        "piranha" : {
+            "avg-weight-kg" : 2
+        }      
+    }
+}
