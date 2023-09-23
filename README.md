@@ -1,10 +1,12 @@
 # Trees of JSON
 
-A tool to generate models.
+Model projections from hierarchical parents in JSON
 
-`toj` is a tool that merges JSON documents in an assumed directory structure, starting from a parent document down to any number of specializations in subdirectories.  
+`toj` is a command-line tool that merges JSON documents in an assumed directory structure, starting from a parent document down to any number of specializations in subdirectories.  
 
-Combining directory traversal with JSON merge logic, this simple tool allows for patterns like object-orientated inheritance, but for data. This may be useful in reducing redundancy in cases where a large number of model instances can be realized from a base general model in addition to one or more successive layers of specialization. 
+Combining directory traversal with JSON merge logic, this simple tool allows for patterns like object-orientated inheritance, but for data. This may be useful in reducing redundancy in cases where a large number of model instances can be realized from a base general model in addition to one or more successive layers of specialization.
+
+The merge strategy is to create the model from the top-most parent.  Children may Create (add new key/values), Update (specify new values for existing keys), and Delete (set a key's value to `null`) from parent data.
 
 ## Usage
 
@@ -110,4 +112,4 @@ $ toj examples/animal-kingdom/zoo/animal-model.json
 
 ### `jq`
 
-The json tool `jq` can perform the JSON object merging, combined with shell scripts to perform directory traversal.
+The json tool `jq` can perform the JSON [object merging](https://stackoverflow.com/questions/19529688/how-to-merge-2-json-objects-from-2-files-using-jq), combined with shell scripts to perform directory traversal.
