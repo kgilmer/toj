@@ -2,6 +2,12 @@ use serde_json::Value;
 use std::error::Error;
 use std::{fs::File, io::BufReader, path::Path};
 
+/// Compute model by merging from the top-most parent to leaf JSON node
+/// # Arguments
+///
+/// * `leaf_file_path` - Path to most nested JSON document
+/// * `verbose` - emit additional infor to `stdout`
+/// * `skip_empty` - if `true` continue traversing file path to root of filesystem, otherwise stop in the first directory
 pub fn compute_model(leaf_file_path: &Path, verbose: bool, skip_empty: bool) -> Value {
     let filename = leaf_file_path.file_name().expect("Validated file");
 
@@ -68,4 +74,19 @@ fn merge(a: &mut Value, b: Value) {
     }
 
     *a = b;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_compute_model_success() {
+        let dir_path = Path::new("examples/animal-kingdom/forest/alpine/animal-model.json");
+
+        // Verify that compute_model returns the expected merged result
+        let result = compute_model(dir_path, true, false);
+
+        assert_eq!(result.to_string(), "{\"animals\":{\"deer\":{\"avg-weight-kg\":40,\"diet\":\"herbivore\",\"leg-count\":4}}}")
+    }
 }
