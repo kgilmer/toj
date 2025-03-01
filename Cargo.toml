@@ -2,6 +2,10 @@
 name = "toj"
 version = "0.2.0"
 edition = "2021"
+description = "Model generation tool for JSON files"
+readme = "README.md"
+license-file = "LICENSE"
+repository = "https://github.com/kgilmer/toj"
 
 [dependencies]
 clap = { version = "4.4", features = ["derive"] }
