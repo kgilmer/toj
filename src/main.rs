@@ -1,9 +1,15 @@
-use serde_json::Value;
-use std::error::Error;
-use std::{fs::File, io::BufReader, path::Path, process};
+#![warn(missing_docs)]
+
+//! Model projections from hierarchical parents in JSON
+//! `toj` is a command-line tool that merges JSON documents in an assumed directory structure, starting from a parent document down to any number of specializations in subdirectories.  
+//! Combining directory traversal with JSON merge logic, this simple tool allows for patterns like single-parent object-orientated inheritance, but for data. This may be useful in reducing redundancy in cases where a large number of model instances can be realized from a base general model in addition to one or more successive layers of specialization.
+//! The merge strategy is to create the model from the top-most parent and then evaluate children in subdirectory order.  Children may Create (add new key/values), Update (specify new values for existing keys), and Delete (set a key's value to `null`) from parent data.
+use std::{path::Path, process};
+use toj::compute_model;
 
 use clap::Parser;
 
+/// Program args
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -12,85 +18,26 @@ struct Args {
     #[arg(short, long, default_value_t = false, help = "See details")]
     verbose: bool,
 
-    #[arg(short, long, default_value_t = false, help = "Traverse to root of file system")]
+    #[arg(
+        short,
+        long,
+        default_value_t = false,
+        help = "Traverse to root of file system"
+    )]
     skip_empty: bool,
 }
 
+/// CLI bootstrap
 fn main() {
     let args = Args::parse();
     let leaf_file_path = Path::new(&args.leaf_file_path);
 
     if !leaf_file_path.exists() || !leaf_file_path.is_file() {
-        eprintln!(
-            "Error, invalid file: {}",
-            leaf_file_path.to_str().unwrap()
-        );
+        eprintln!("Error, invalid file: {}", leaf_file_path.to_str().unwrap());
         process::exit(1);
     }
 
-    let filename = leaf_file_path.file_name().expect("Validated file");
-
-    let leaf_path = leaf_file_path
-        .parent()
-        .expect("Validated file path")
-        .parent()
-        .expect("Validated file path");
-
-    let mut model_dirs = vec![leaf_file_path.to_path_buf()];
-    if args.verbose {
-        println!("Found model: {:?}", &leaf_file_path);
-    }
-
-    for segment in leaf_path.ancestors() {
-        let mut pb = segment.to_path_buf();
-        pb.push(filename);
-
-        if pb.exists() {
-            if args.verbose {
-                println!("Found model: {:?}", &pb);
-            }
-            model_dirs.push(pb);
-        } else if !args.skip_empty {
-            break;
-        }
-    }
-
-    model_dirs.reverse(); // Merge from parent to child, child overriding parent
-
-    let mut model_iter = model_dirs.iter();
-    let merged_model = model_iter.next().expect("Known to have at least one model");
-    let mut merged_model = read_json_file(merged_model).expect("Can read and parse json file");
-
-    for child_model_path in model_iter {
-        let child_model = read_json_file(child_model_path).expect("Can read and parse json file");
-        merge(&mut merged_model, child_model);
-    }
+    let merged_model = compute_model(leaf_file_path, args.verbose, args.skip_empty);
 
     println!("{}", serde_json::to_string_pretty(&merged_model).unwrap());
-}
-
-fn read_json_file<P: AsRef<Path>>(path: P) -> Result<Value, Box<dyn Error>> {
-    let file = File::open(path)?;
-    let reader = BufReader::new(file);
-    let u = serde_json::from_reader(reader)?;
-
-    Ok(u)
-}
-
-fn merge(a: &mut Value, b: Value) {
-    if let Value::Object(a) = a {
-        if let Value::Object(b) = b {
-            for (k, v) in b {
-                if v.is_null() {
-                    a.remove(&k);
-                } else {
-                    merge(a.entry(k).or_insert(Value::Null), v);
-                }
-            }
-
-            return;
-        }
-    }
-
-    *a = b;
 }
